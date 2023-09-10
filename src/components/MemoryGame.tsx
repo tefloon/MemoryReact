@@ -3,13 +3,55 @@ import Card from "./Card";
 import shuffleArray from "../misc/shuffle";
 import "./MemoryGame.css";
 
+import { getPokemon, getPokemonImg } from "../misc/PokemonServiceAxios";
+
+type PokemonAPIResponse = {
+  name: string;
+  url: string;
+};
+
 interface Props {
   deckSize: number;
 }
 
+type PokemonCard = {
+  id: number;
+  name: string;
+  imageURL: string;
+};
+
 function MemoryGame({ deckSize }: Props) {
+  // console.log("Reloading...");
   //  Functions
   // ============
+
+  function getNames() {
+    getPokemon(3, 223).then((res) => {
+      console.log(res);
+      setPokemonApiResponse(res.results);
+    });
+  }
+
+  async function getImgUrls() {
+    let pokemonTempArray: PokemonCard[] = [];
+
+    pokemonApiResponse.forEach((pokemon, id) => {
+      getPokemonImg(pokemon.name)
+        .then((res) => {
+          let newPokemon: PokemonCard = {
+            id: id,
+            name: res.name,
+            imageURL: res.sprites.front_default,
+          };
+          pokemonTempArray.push(newPokemon);
+          console.log(pokemonTempArray);
+          setPokemonCards([...pokemonTempArray]);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    });
+  }
 
   // Create shuffled cards
   function createDeck() {
@@ -46,7 +88,7 @@ function MemoryGame({ deckSize }: Props) {
 
       if (numberCollected == deckSize - 2) {
         console.log("Nowa gra!");
-        setIsPlaying(false);
+        setTimeout(() => setIsPlaying(false), 500);
       }
     } else {
       console.log("Nietrafione");
@@ -104,7 +146,10 @@ function MemoryGame({ deckSize }: Props) {
 
   //  Variables
   // ===========
-
+  const [pokemonCards, setPokemonCards] = useState<PokemonCard[]>([]);
+  const [pokemonApiResponse, setPokemonApiResponse] = useState<
+    PokemonAPIResponse[]
+  >([]);
   const [cards, setCards] = useState<number[]>([]);
   const [IDs, setIDs] = useState<number[]>([]);
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
@@ -118,20 +163,33 @@ function MemoryGame({ deckSize }: Props) {
     [collectedCards]
   );
 
+  // useEffect(() => {
+  //   getNames();
+  //   getImgUrls();
+  // }, []);
+
   return (
-    <div className="grid-cols-4 grid gap-1 m-auto auto-rows-fr gameWindow">
-      {cards.map((number, id) => (
-        <Card
-          cardValue={number}
-          cardPlace={id}
-          cardVisibility={visibleCards[id]}
-          isCardCollected={collectedCards[id]}
-          isEvaluationPending={isEvaluationPending}
-          key={IDs[id]}
-          onSelect={onSelectCard}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid-cols-4 grid gap-1 m-auto auto-rows-fr gameWindow">
+        {cards.map((number, id) => (
+          <Card
+            cardValue={number}
+            cardPlace={id}
+            cardVisibility={visibleCards[id]}
+            isCardCollected={collectedCards[id]}
+            isEvaluationPending={isEvaluationPending}
+            key={IDs[id]}
+            onSelect={onSelectCard}
+          />
+        ))}
+      </div>
+      <div>
+        <div>
+          {pokemonCards &&
+            pokemonCards.map((item) => <img src={item.imageURL} />)}
+        </div>
+      </div>
+    </>
   );
 }
 
