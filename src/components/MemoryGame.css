@@ -1,0 +1,5 @@
+.gameWindow {
+  width: min(50%, 300px);
+  height: max(80%, 300px);
+  margin: 0 auto;
+}
